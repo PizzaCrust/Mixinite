@@ -24,7 +24,11 @@ import java.util.Optional;
  * @since 1.0-SNAPSHOT
  * @author PizzaCrust
  */
-public class FieldOverlapPlugin implements MixinTransformationPlugin {
+public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransformationPlugin {
+
+    public FieldOverlapPlugin() {
+        super("FieldOverlapPlugin");
+    }
 
     private Optional<CtField> getCtField(CtField ctField, CtClass newClass) {
         for (CtField ctField1 : newClass.getDeclaredFields()) {
@@ -56,19 +60,14 @@ public class FieldOverlapPlugin implements MixinTransformationPlugin {
         return newMembers;
     }
 
-    private void log(String msg) {
-        System.out.println("FieldOverlapPlugin: " + msg);
-    }
 
-    private void log(String msg, String... format) {
-        log(String.format(msg.replace("{}", "%s"), (Object[]) format));
-    }
 
     public static void main(String... args) throws Exception {
         ClassPool classPool = ClassPool.getDefault();
         new FieldOverlapPlugin().log("{} lol {}", "Hi", "bye");
         CtClass mixinClass = classPool.getCtClass(ExampleClass.MixinExampleClass.class.getName());
         CtClass exampleClass = classPool.getCtClass(ExampleClass.class.getName());
+        new AccessTransformerPlugin().handle(mixinClass, exampleClass);
         new FieldOverlapPlugin().handle(mixinClass, exampleClass);
         URLClassLoader diffLoader = new URLClassLoader(new URL[0]);
         Class<?> jvmClass = exampleClass.toClass(diffLoader);
@@ -76,6 +75,7 @@ public class FieldOverlapPlugin implements MixinTransformationPlugin {
             field.setAccessible(true);
             Constructor classConstructor = jvmClass.getConstructor();
             classConstructor.setAccessible(true);
+            System.out.println("is_public: " + Modifier.isPublic(field.getModifiers()));
             System.out.println(field.getName() + ": " + field.getType().getSimpleName() + " = " +
                     field.get(classConstructor.newInstance()));
         }
@@ -87,9 +87,12 @@ public class FieldOverlapPlugin implements MixinTransformationPlugin {
 
         public ExampleClass() {}
 
+        @AccessTransformerPlugin.AccessTransform(entries = {@AccessTransformerPlugin.AccessTransform.Entry
+                (name = "meow", type = AccessTransformerPlugin.AccessTransform.Type.FIELD, access
+                        = Modifier.PUBLIC)})
         static class MixinExampleClass {
 
-            private int meow = 1;
+            public int meow = 1;
             private int dog = 2;
 
         }
