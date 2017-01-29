@@ -78,6 +78,7 @@ public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransform
         new AccessTransformerPlugin().handle(mixinClass, exampleClass);
         new FieldOverlapPlugin().handle(mixinClass, exampleClass);
         new MethodOverlapPlugin().handle(mixinClass, exampleClass);
+        new InjectorPlugin().handle(mixinClass, exampleClass);
         URLClassLoader diffLoader = new URLClassLoader(new URL[0]);
         Class<?> jvmClass = exampleClass.toClass(diffLoader);
         for (Field field : jvmClass.getDeclaredFields()) {
@@ -92,8 +93,11 @@ public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransform
             method.setAccessible(true);
             Constructor classConstructor = jvmClass.getConstructor();
             classConstructor.setAccessible(true);
-            System.out.println(method.getName());
-            method.invoke(classConstructor.newInstance());
+            //System.out.println(method.getName());
+            if (method.getParameterTypes().length == 0) {
+                System.out.println("INVOCATION (method name: " + method.getName() + ")");
+                method.invoke(classConstructor.newInstance());
+            }
         }
     }
 
@@ -104,6 +108,14 @@ public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransform
         public ExampleClass() {}
 
         public void hahaha() {}
+
+        public void woahMan() {
+            System.out.println("Hello.");
+        }
+
+        public void hehehehe() {
+            System.out.println("Hello ");
+        }
 
         @AccessTransformerPlugin.AccessTransform(entries = {@AccessTransformerPlugin.AccessTransform.Entry
                 (name = "meow", type = AccessTransformerPlugin.AccessTransform.Type.FIELD, access
@@ -129,6 +141,17 @@ public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransform
                 System.out.println("meta");
             }
 
+            @MethodOverlapPlugin.IgnoreMethodOverlapping
+            @InjectorPlugin.Inject(line = 109)
+            public void woahMan(InjectorPlugin.CallbackMetadata metadata) {
+                System.out.println("Hello world!");
+            }
+
+            @MethodOverlapPlugin.IgnoreMethodOverlapping
+            @InjectorPlugin.Inject(pos = InjectorPlugin.Inject.Pos.RETURN)
+            public void hehehehe(InjectorPlugin.CallbackMetadata metadata) {
+                System.out.println("world!");
+            }
         }
 
     }
