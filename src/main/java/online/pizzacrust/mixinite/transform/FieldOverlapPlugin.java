@@ -7,6 +7,10 @@ import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.NotFoundException;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -44,7 +48,11 @@ public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransform
         List<CtField> changedMembers = new ArrayList<>();
         for (CtField originalMember : ctClass.getDeclaredFields()) {
             Optional<CtField> mixinMember = getCtField(originalMember, mixin);
-            mixinMember.ifPresent(changedMembers::add);
+            mixinMember.ifPresent((mixinMember1) -> {
+                if (!mixinMember1.hasAnnotation(IgnoreFieldOverlapping.class)) {
+                    changedMembers.add(mixinMember1);
+                }
+            });
         }
         return changedMembers;
     }
@@ -53,13 +61,13 @@ public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransform
         List<CtField> newMembers = new ArrayList<>();
         for (CtField mixinMember : mixin.getDeclaredFields()) {
             Optional<CtField> originalMember = getCtField(mixinMember, ctClass);
-            if (!originalMember.isPresent()) {
+            if (!originalMember.isPresent() && !mixinMember.hasAnnotation(IgnoreFieldOverlapping
+                    .class)) {
                 newMembers.add(mixinMember);
             }
         }
         return newMembers;
     }
-
 
 
     public static void main(String... args) throws Exception {
@@ -69,6 +77,7 @@ public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransform
         CtClass exampleClass = classPool.getCtClass(ExampleClass.class.getName());
         new AccessTransformerPlugin().handle(mixinClass, exampleClass);
         new FieldOverlapPlugin().handle(mixinClass, exampleClass);
+        new MethodOverlapPlugin().handle(mixinClass, exampleClass);
         URLClassLoader diffLoader = new URLClassLoader(new URL[0]);
         Class<?> jvmClass = exampleClass.toClass(diffLoader);
         for (Field field : jvmClass.getDeclaredFields()) {
@@ -79,6 +88,13 @@ public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransform
             System.out.println(field.getName() + ": " + field.getType().getSimpleName() + " = " +
                     field.get(classConstructor.newInstance()));
         }
+        for (Method method : jvmClass.getDeclaredMethods()) {
+            method.setAccessible(true);
+            Constructor classConstructor = jvmClass.getConstructor();
+            classConstructor.setAccessible(true);
+            System.out.println(method.getName());
+            method.invoke(classConstructor.newInstance());
+        }
     }
 
     static class ExampleClass {
@@ -87,6 +103,8 @@ public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransform
 
         public ExampleClass() {}
 
+        public void hahaha() {}
+
         @AccessTransformerPlugin.AccessTransform(entries = {@AccessTransformerPlugin.AccessTransform.Entry
                 (name = "meow", type = AccessTransformerPlugin.AccessTransform.Type.FIELD, access
                         = Modifier.PUBLIC)})
@@ -94,6 +112,22 @@ public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransform
 
             public int meow = 1;
             private int dog = 2;
+
+            @IgnoreFieldOverlapping
+            public int meow2 = 3;
+
+            @MethodOverlapPlugin.IgnoreMethodOverlapping
+            public void nope() {
+
+            }
+
+            public void hahaha() {
+                System.out.println("Meow");
+            }
+
+            public void newMethod() {
+                System.out.println("meta");
+            }
 
         }
 
@@ -204,6 +238,18 @@ public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransform
                 });
             }
         }
+    }
+
+    /**
+     * Identifies a field to ignore this plugin.
+     *
+     * @since 1.0-SNAPSHOT
+     * @author PizzaCrust
+     */
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface IgnoreFieldOverlapping {
+
     }
 
 }
