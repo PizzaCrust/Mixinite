@@ -1,10 +1,19 @@
 package online.pizzacrust.mixinite.transform;
 
+import javassist.CannotCompileException;
+import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.CtNewMethod;
+import javassist.NotFoundException;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,9 +41,7 @@ public class InjectorPlugin extends LoggablePlugin implements MixinTransformatio
         for (CtMethod ctMethod : newClass.getDeclaredMethods()) {
             if (ctMethod.getName().equals(method.getName()) && removeCallbackDescriptor(ctMethod.getMethodInfo2()
                     .getDescriptor()).equals(removeCallbackDescriptor(method.getMethodInfo2()
-                    .getDescriptor())) &&
-                    ctMethod
-                    .getModifiers() == method.getModifiers()) {
+                    .getDescriptor()))) {
                 return Optional.of(ctMethod);
             }
         }
@@ -58,10 +65,34 @@ public class InjectorPlugin extends LoggablePlugin implements MixinTransformatio
         return methods;
     }
 
+    private Class<?> fromArray(CtClass ctClass) throws ClassNotFoundException {
+        String className = ctClass.getPackageName() + "." + ctClass.getSimpleName().replace("[]", "");
+        Class<?> clazz = Class.forName(className);
+        return Array.newInstance(clazz, 0).getClass();
+    }
+
+    private Class<?>[] from(CtClass... ctClasses) {
+        List<Class<?>> reflectClasses = new ArrayList<>();
+        for (CtClass ctClass : ctClasses) {
+            try {
+                if (ctClass.isArray()) {
+                    reflectClasses.add(fromArray(ctClass));
+                } else {
+                    reflectClasses.add(Class.forName(ctClass.getName()));
+                }
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        return reflectClasses.toArray(new Class[reflectClasses.size()]);
+    }
+
     private Optional<Inject> getInjectMetadata(CtMethod ctMethod) {
         try {
-            return Optional.of((Inject) ctMethod.getAnnotation(Inject.class));
-        } catch (ClassNotFoundException e) {
+            return Optional.of((Inject) Class.forName(ctMethod.getDeclaringClass().getName())
+                    .getDeclaredMethod(ctMethod.getName(), from(ctMethod.getParameterTypes()))
+                    .getAnnotation(Inject.class));
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return Optional.empty();
@@ -94,7 +125,7 @@ public class InjectorPlugin extends LoggablePlugin implements MixinTransformatio
                             callbackClass = CallbackMetadataReturnable.class.getName();
                         }
                         if (callbackClass.equals(CallbackMetadata.class.getName())) {
-                            String code = String.format("%s callbackInfo = new %s(); this.%s" +
+                            String code = String.format("%s callbackInfo = new %s(); %s" +
                                     "($$, callbackInfo); if (callbackInfo.isCancelled()) { return; " +
                                     "}", callbackClass, callbackClass, methodName);
                             if (injectMetadata.line() != -1) {
@@ -110,9 +141,12 @@ public class InjectorPlugin extends LoggablePlugin implements MixinTransformatio
                                 }
                             }
                         } else if (callbackClass.equals(CallbackMetadataReturnable.class.getName())) {
-                            String code = String.format("%s<$r> callbackInfo = new %s<$r>(); this" +
-                                            ".%s($$, callbackInfo); if (callbackInfo.isCancelled()) { " +
-                                            "return ($r) callbackInfo.getReturnObj(); }",
+                            String code = String.format("%s callbackInfo = new %s();" +
+                                            "%s($$, callbackInfo); if (callbackInfo.isCancelled()) { " +
+                                            "return (" + newMethod.getReturnType().getName() + ")" +
+                                            " " +
+                                            "callbackInfo" +
+                                            ".getReturnObj(); }",
                                     callbackClass,
                                     callbackClass, methodName);
                             if (injectMetadata.line() != -1) {
@@ -136,6 +170,8 @@ public class InjectorPlugin extends LoggablePlugin implements MixinTransformatio
         });
     }
 
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
     public @interface Inject {
         int line() default -1;
 
@@ -168,6 +204,24 @@ public class InjectorPlugin extends LoggablePlugin implements MixinTransformatio
 
         public void setReturnObj(RETURN_TYPE returnObj) {
             this.returnObj = returnObj;
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        System.out.println(String[].class.getName());
+        CtClass ctClass = ClassPool.getDefault().getCtClass(InjectorPlugin.class.getName());
+        for (CtMethod ctMethod : ctClass.getDeclaredMethods()) {
+            System.out.println(ctMethod.getName());
+            if (ctMethod.getName().equals("main")) {
+                for (CtClass parameter : ctMethod.getParameterTypes()) {
+                    System.out.println(parameter.getName());
+                    System.out.println(parameter.getPackageName());
+                    System.out.println(parameter.getSimpleName().replace("[]", ""));
+                    System.out.println("[L" + parameter.getPackageName() + "." + parameter
+                            .getSimpleName
+                            ().replace("[]", ""));
+                }
+            }
         }
     }
 

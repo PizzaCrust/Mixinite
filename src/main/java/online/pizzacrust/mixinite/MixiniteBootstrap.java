@@ -11,6 +11,7 @@ import java.util.Optional;
 
 import online.pizzacrust.mixinite.transform.AccessTransformerPlugin;
 import online.pizzacrust.mixinite.transform.FieldOverlapPlugin;
+import online.pizzacrust.mixinite.transform.InjectorPlugin;
 import online.pizzacrust.mixinite.transform.InterfacePlugin;
 import online.pizzacrust.mixinite.transform.MethodOverlapPlugin;
 
@@ -46,8 +47,8 @@ public class MixiniteBootstrap {
 
     private Optional<Mixin> getMixinMetadata(CtClass ctClass) {
         try {
-            return Optional.of((Mixin) ctClass.getAnnotation(Mixin.class));
-        } catch (ClassNotFoundException e) {
+            return Optional.of((Mixin) Class.forName(ctClass.getName()).getAnnotation(Mixin.class));
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return Optional.empty();
@@ -58,6 +59,7 @@ public class MixiniteBootstrap {
         new AccessTransformerPlugin().handle(mixin, target);
         new FieldOverlapPlugin().handle(mixin, target);
         new MethodOverlapPlugin().handle(mixin, target);
+        new InjectorPlugin().handle(mixin, target);
         new InterfacePlugin().handle(mixin, target);
         if (load) {
             if (classLoader != null) {
