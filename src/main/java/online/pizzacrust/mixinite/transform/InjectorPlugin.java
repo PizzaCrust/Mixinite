@@ -84,7 +84,10 @@ public class InjectorPlugin extends LoggablePlugin implements MixinTransformatio
                     CtMethod tMethod = targetMethod.get();
                     try {
                         CtMethod newMethod = new CtMethod(method, ctClass, null);
-                        System.out.println(newMethod.getName());
+                        //System.out.println(newMethod.getName());
+                        String methodName = method.getDeclaringClass().getSimpleName() + "$" +
+                                method.getName();
+                        newMethod.setName(methodName);
                         ctClass.addMethod(newMethod);
                         String callbackClass = CallbackMetadata.class.getName();
                         if (tMethod.getReturnType() != CtClass.voidType) {
@@ -93,7 +96,7 @@ public class InjectorPlugin extends LoggablePlugin implements MixinTransformatio
                         if (callbackClass.equals(CallbackMetadata.class.getName())) {
                             String code = String.format("%s callbackInfo = new %s(); this.%s" +
                                     "($$, callbackInfo); if (callbackInfo.isCancelled()) { return; " +
-                                    "}", callbackClass, callbackClass, newMethod.getName());
+                                    "}", callbackClass, callbackClass, methodName);
                             if (injectMetadata.line() != -1) {
                                 tMethod.insertAt(injectMetadata.line(), code);
                             } else {
@@ -108,9 +111,10 @@ public class InjectorPlugin extends LoggablePlugin implements MixinTransformatio
                             }
                         } else if (callbackClass.equals(CallbackMetadataReturnable.class.getName())) {
                             String code = String.format("%s<$r> callbackInfo = new %s<$r>(); this" +
-                                            ".%s$%s($$, callbackInfo); if (callbackInfo.isCancelled()) { " +
-                                            "return callbackInfo.getReturnObj(); }", callbackClass,
-                                    callbackClass, ctClass.getSimpleName(), method.getName());
+                                            ".%s($$, callbackInfo); if (callbackInfo.isCancelled()) { " +
+                                            "return ($r) callbackInfo.getReturnObj(); }",
+                                    callbackClass,
+                                    callbackClass, methodName);
                             if (injectMetadata.line() != -1) {
                                 tMethod.insertAt(injectMetadata.line(), code);
                             } else {
