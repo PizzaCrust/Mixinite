@@ -11,12 +11,14 @@ import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 import java.util.stream.Stream;
 
 import online.pizzacrust.mixinite.MixiniteBootstrap;
@@ -28,20 +30,18 @@ public class MixinBootstrapTweaker implements ITweaker {
     @Override
     public void acceptOptions(List<String> list, File file, File file1, String s) {
         this.args = list;
-        List<String> toRemove = new ArrayList<>();
-        boolean capture = false;
-        for (String arg : args) {
-            if (capture) {
-                this.main = arg;
-                toRemove.add(arg);
-                capture = false;
+        try {
+            Manifest manifest = new Manifest(getClass().getClassLoader().getResourceAsStream
+                    ("META-INF/MANIFEST.MF"));
+            String mainClass = manifest.getMainAttributes().getValue("Main-Class");
+            if (mainClass != null) {
+                System.out.println("Found main class! (" + mainClass + ")");
+                this.main = mainClass;
             }
-            if (arg.equalsIgnoreCase("--main")) {
-                capture = true;
-                toRemove.add(arg);
-            }
+        } catch (IOException e) {
+            System.out.println("Couldn't find main class, using FallbackMain.");
+            e.printStackTrace();
         }
-        args.removeAll(toRemove);
     }
 
     @Override
