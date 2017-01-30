@@ -7,6 +7,8 @@ public class FallbackMain implements Meow2 {
         System.out.println("Hello, world!");
     }
 
+    private void accessChange(){}
+
     public String meow2() {
         return "meow";
     }

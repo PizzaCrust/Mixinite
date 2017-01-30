@@ -1,12 +1,18 @@
 package online.pizzacrust.mixinite;
 
+import java.lang.reflect.Modifier;
+
 import online.pizzacrust.mixinite.FallbackMain;
 import online.pizzacrust.mixinite.Mixin;
 import online.pizzacrust.mixinite.launch.Meow2;
+import online.pizzacrust.mixinite.transform.AccessTransformerPlugin;
 import online.pizzacrust.mixinite.transform.InjectorPlugin;
 import online.pizzacrust.mixinite.transform.MethodOverlapPlugin;
 
 @Mixin(FallbackMain.class)
+@AccessTransformerPlugin.AccessTransform(entries = {@AccessTransformerPlugin.AccessTransform
+        .Entry(name = "accessChange", desc = "()V", type = AccessTransformerPlugin
+        .AccessTransform.Type.METHOD, access = Modifier.PRIVATE)})
 public class MixinFallbackMain implements FallbackMain.Meow {
 
     @MethodOverlapPlugin.IgnoreMethodOverlapping

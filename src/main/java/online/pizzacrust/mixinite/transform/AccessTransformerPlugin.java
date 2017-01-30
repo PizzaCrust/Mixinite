@@ -26,7 +26,8 @@ public class AccessTransformerPlugin extends LoggablePlugin implements MixinTran
 
     private Optional<AccessTransform> getClassATMetadata(CtClass ctClass) {
         try {
-            return Optional.of((AccessTransform) ctClass.getAnnotation(AccessTransform.class));
+            return Optional.of((AccessTransform) Class.forName(ctClass.getName()).getAnnotation
+                    (AccessTransform.class));
         } catch (Exception e) {
             e.printStackTrace();
         }
