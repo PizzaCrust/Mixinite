@@ -29,6 +29,9 @@
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>online.pizzacrust.mixinite.launch.MixiniteLaunchWrapperLaunch</mainClass>
+                                    <manifestEntries>
+                                        <Secondary-Main-Class>online.pizzacrust.mixinite.FallbackMain</Secondary-Main-Class>
+                                    </manifestEntries>
                                 </transformer>
                             </transformers>
                         </configuration>
