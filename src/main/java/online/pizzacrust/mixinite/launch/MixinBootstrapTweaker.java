@@ -33,7 +33,7 @@ public class MixinBootstrapTweaker implements ITweaker {
         try {
             Manifest manifest = new Manifest(getClass().getClassLoader().getResourceAsStream
                     ("META-INF/MANIFEST.MF"));
-            String mainClass = manifest.getMainAttributes().getValue("Main-Class");
+            String mainClass = manifest.getMainAttributes().getValue("Secondary-Main-Class");
             if (mainClass != null) {
                 System.out.println("Found main class! (" + mainClass + ")");
                 this.main = mainClass;
