@@ -1,5 +1,6 @@
 package online.pizzacrust.mixinite;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 import online.pizzacrust.mixinite.FallbackMain;
@@ -12,7 +13,7 @@ import online.pizzacrust.mixinite.transform.MethodOverlapPlugin;
 @Mixin(FallbackMain.class)
 @AccessTransformerPlugin.AccessTransform(entries = {@AccessTransformerPlugin.AccessTransform
         .Entry(name = "accessChange", desc = "()V", type = AccessTransformerPlugin
-        .AccessTransform.Type.METHOD, access = Modifier.PRIVATE)})
+        .AccessTransform.Type.METHOD, access = Modifier.PUBLIC)})
 public class MixinFallbackMain implements FallbackMain.Meow {
 
     @MethodOverlapPlugin.IgnoreMethodOverlapping
@@ -24,6 +25,14 @@ public class MixinFallbackMain implements FallbackMain.Meow {
         System.out.println(meow.meow());
         Meow2 meow2 = (Meow2) new FallbackMain();
         System.out.println(meow2.meow2());
+        System.out.println("Checking access transformer...");
+        for (Method method : FallbackMain.class.getDeclaredMethods()) {
+            if (method.getName().equals("accessChange")) {
+                System.out.println("is_public = " + Modifier.isPublic(method.getModifiers()));
+                System.out.println("is_private = " + Modifier.isPrivate(method.getModifiers()));
+                assert Modifier.isPublic(method.getModifiers());
+            }
+        }
     }
 
     @MethodOverlapPlugin.IgnoreMethodOverlapping
