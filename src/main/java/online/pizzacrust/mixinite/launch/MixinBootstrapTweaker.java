@@ -13,6 +13,7 @@ import net.minecraft.launchwrapper.LaunchClassLoader;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
@@ -30,17 +31,32 @@ public class MixinBootstrapTweaker implements ITweaker {
     @Override
     public void acceptOptions(List<String> list, File file, File file1, String s) {
         this.args = list;
-        try {
-            Manifest manifest = new Manifest(getClass().getClassLoader().getResourceAsStream
-                    ("META-INF/MANIFEST.MF"));
-            String mainClass = manifest.getMainAttributes().getValue("Secondary-Main-Class");
-            if (mainClass != null) {
-                System.out.println("Found main class! (" + mainClass + ")");
-                this.main = mainClass;
+        final boolean[] capture = new boolean[1];
+        final String[] possibleMain = {null};
+        args.forEach((arg) -> {
+            if (capture[0]) {
+                possibleMain[0] = arg;
             }
-        } catch (IOException e) {
-            System.out.println("Couldn't find main class, using FallbackMain.");
-            e.printStackTrace();
+            if (arg.equalsIgnoreCase("--main")) {
+                capture[0] = true;
+            }
+        });
+        if (possibleMain[0] != null) {
+            System.out.println("Custom main class found: " + possibleMain[0]);
+            this.main = possibleMain[0];
+        } else {
+            try {
+                Manifest manifest = new Manifest(getClass().getClassLoader().getResourceAsStream
+                        ("META-INF/MANIFEST.MF"));
+                String mainClass = manifest.getMainAttributes().getValue("Secondary-Main-Class");
+                if (mainClass != null) {
+                    System.out.println("Found main class! (" + mainClass + ")");
+                    this.main = mainClass;
+                }
+            } catch (IOException e) {
+                System.out.println("Couldn't find main class, using FallbackMain.");
+                e.printStackTrace();
+            }
         }
     }
 
@@ -114,6 +130,20 @@ public class MixinBootstrapTweaker implements ITweaker {
     @Override
     public String[] getLaunchArguments() {
         return args.toArray(new String[args.size()]);
+    }
+
+    public static void main(String... args) {
+        List<String> args1 = Arrays.asList("--main", "online.pasda.sdsd.meow");
+        final boolean[] capture = {false};
+        args1.forEach((arg) -> {
+            if (capture[0]) {
+                System.out.println(arg);
+                System.exit(0);
+            }
+            if (arg.equalsIgnoreCase("--main")) {
+                capture[0] = true;
+            }
+        });
     }
 
 }
