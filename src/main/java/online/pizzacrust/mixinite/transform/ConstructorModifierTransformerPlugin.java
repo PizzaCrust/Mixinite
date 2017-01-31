@@ -114,7 +114,7 @@ public class ConstructorModifierTransformerPlugin extends LoggablePlugin impleme
     @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface ConstructorModify {
-        boolean all();
+        boolean all() default true;
     }
 
 }

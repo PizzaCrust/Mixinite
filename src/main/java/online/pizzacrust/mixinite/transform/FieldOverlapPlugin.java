@@ -128,6 +128,7 @@ public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransform
             public int meow = 1;
             private int dog = 2;
 
+            @MethodOverlapPlugin.IgnoreMethodOverlapping
             @ConstructorModifierTransformerPlugin.ConstructorModify(all = true)
             public void onConstructorEnd(InjectorPlugin.CallbackMetadata callbackMetadata) {
                 System.out.println("constructor mixin works");

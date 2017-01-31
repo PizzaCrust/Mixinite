@@ -7,6 +7,7 @@ import online.pizzacrust.mixinite.FallbackMain;
 import online.pizzacrust.mixinite.Mixin;
 import online.pizzacrust.mixinite.launch.Meow2;
 import online.pizzacrust.mixinite.transform.AccessTransformerPlugin;
+import online.pizzacrust.mixinite.transform.ConstructorModifierTransformerPlugin;
 import online.pizzacrust.mixinite.transform.InjectorPlugin;
 import online.pizzacrust.mixinite.transform.MethodOverlapPlugin;
 
@@ -15,6 +16,12 @@ import online.pizzacrust.mixinite.transform.MethodOverlapPlugin;
         .Entry(name = "accessChange", desc = "()V", type = AccessTransformerPlugin
         .AccessTransform.Type.METHOD, access = Modifier.PUBLIC)})
 public class MixinFallbackMain implements FallbackMain.Meow {
+
+    @MethodOverlapPlugin.IgnoreMethodOverlapping
+    @ConstructorModifierTransformerPlugin.ConstructorModify(all = false)
+    public void handleConstructorEnd(String a, InjectorPlugin.CallbackMetadata callbackMetadata) {
+        System.out.println("Constructor selection works (" + a + ")");
+    }
 
     @MethodOverlapPlugin.IgnoreMethodOverlapping
     @InjectorPlugin.Inject(line = 5)
@@ -33,6 +40,8 @@ public class MixinFallbackMain implements FallbackMain.Meow {
                 assert Modifier.isPublic(method.getModifiers());
             }
         }
+        System.out.println("Testing constructor...");
+        new FallbackMain("meow");
     }
 
     @MethodOverlapPlugin.IgnoreMethodOverlapping
