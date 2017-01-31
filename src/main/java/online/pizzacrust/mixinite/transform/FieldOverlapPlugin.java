@@ -79,6 +79,7 @@ public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransform
         new FieldOverlapPlugin().handle(mixinClass, exampleClass);
         new MethodOverlapPlugin().handle(mixinClass, exampleClass);
         new InjectorPlugin().handle(mixinClass, exampleClass);
+        new ConstructorModifierTransformerPlugin().handle(mixinClass, exampleClass);
         URLClassLoader diffLoader = new URLClassLoader(new URL[0]);
         Class<?> jvmClass = exampleClass.toClass(diffLoader);
         for (Field field : jvmClass.getDeclaredFields()) {
@@ -105,7 +106,9 @@ public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransform
 
         private int meow = 0;
 
-        public ExampleClass() {}
+        public ExampleClass() {
+            System.out.println("constructor start");
+        }
 
         public void hahaha() {}
 
@@ -124,6 +127,11 @@ public class FieldOverlapPlugin extends LoggablePlugin implements MixinTransform
 
             public int meow = 1;
             private int dog = 2;
+
+            @ConstructorModifierTransformerPlugin.ConstructorModify(all = true)
+            public void onConstructorEnd(InjectorPlugin.CallbackMetadata callbackMetadata) {
+                System.out.println("constructor mixin works");
+            }
 
             @IgnoreFieldOverlapping
             public int meow2 = 3;

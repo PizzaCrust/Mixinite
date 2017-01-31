@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 import online.pizzacrust.mixinite.transform.AccessTransformerPlugin;
+import online.pizzacrust.mixinite.transform.ConstructorModifierTransformerPlugin;
 import online.pizzacrust.mixinite.transform.FieldOverlapPlugin;
 import online.pizzacrust.mixinite.transform.InjectorPlugin;
 import online.pizzacrust.mixinite.transform.InterfacePlugin;
@@ -60,6 +61,7 @@ public class MixiniteBootstrap {
         new FieldOverlapPlugin().handle(mixin, target);
         new MethodOverlapPlugin().handle(mixin, target);
         new InjectorPlugin().handle(mixin, target);
+        new ConstructorModifierTransformerPlugin().handle(mixin, target);
         new InterfacePlugin().handle(mixin, target);
         if (load) {
             if (classLoader != null) {

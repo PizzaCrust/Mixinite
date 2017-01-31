@@ -28,7 +28,7 @@ public class InjectorPlugin extends LoggablePlugin implements MixinTransformatio
         super("InjectorPlugin");
     }
 
-    private String removeCallbackDescriptor(String descriptor) {
+    static String removeCallbackDescriptor(String descriptor) {
         String a = descriptor.replace
                 ("Lonline/pizzacrust/mixinite/transform/InjectorPlugin$CallbackMetadata;", "");
         String b = a.replace
@@ -65,13 +65,13 @@ public class InjectorPlugin extends LoggablePlugin implements MixinTransformatio
         return methods;
     }
 
-    private Class<?> fromArray(CtClass ctClass) throws ClassNotFoundException {
+    private static Class<?> fromArray(CtClass ctClass) throws ClassNotFoundException {
         String className = ctClass.getPackageName() + "." + ctClass.getSimpleName().replace("[]", "");
         Class<?> clazz = Class.forName(className);
         return Array.newInstance(clazz, 0).getClass();
     }
 
-    private Class<?>[] from(CtClass... ctClasses) {
+    static Class<?>[] from(CtClass... ctClasses) {
         List<Class<?>> reflectClasses = new ArrayList<>();
         for (CtClass ctClass : ctClasses) {
             try {
