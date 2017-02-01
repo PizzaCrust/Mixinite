@@ -17,6 +17,8 @@ import online.pizzacrust.mixinite.transform.MethodOverlapPlugin;
         .AccessTransform.Type.METHOD, access = Modifier.PUBLIC)})
 public class MixinFallbackMain implements FallbackMain.Meow {
 
+    private final String abc = "a";
+
     @MethodOverlapPlugin.IgnoreMethodOverlapping
     @ConstructorModifierTransformerPlugin.ConstructorModify(all = false)
     public void handleConstructorEnd(String a, InjectorPlugin.CallbackMetadata callbackMetadata) {

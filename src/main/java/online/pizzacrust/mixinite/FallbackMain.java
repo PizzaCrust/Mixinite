@@ -4,6 +4,8 @@ import online.pizzacrust.mixinite.launch.Meow2;
 
 public class FallbackMain implements Meow2 {
 
+    private final String a = "a";
+
     public FallbackMain(String a) {}
 
     public FallbackMain() { System.out.println("Nope"); }

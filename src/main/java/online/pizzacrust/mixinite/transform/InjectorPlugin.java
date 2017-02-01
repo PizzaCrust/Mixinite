@@ -28,7 +28,7 @@ public class InjectorPlugin extends LoggablePlugin implements MixinTransformatio
         super("InjectorPlugin");
     }
 
-    static String removeCallbackDescriptor(String descriptor) {
+    public static String removeCallbackDescriptor(String descriptor) {
         String a = descriptor.replace
                 ("Lonline/pizzacrust/mixinite/transform/InjectorPlugin$CallbackMetadata;", "");
         String b = a.replace
