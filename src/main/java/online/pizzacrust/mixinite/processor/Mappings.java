@@ -76,9 +76,9 @@ public class Mappings {
         });
     }
 
-    private static Optional<Mixin> getMixinMetadata(CtClass ctClass) {
+    private static Optional<Mixin> getMixinMetadata(ClassLoader classLoader, CtClass ctClass) {
         try {
-            return Optional.of(Class.forName(ctClass.getName()).getAnnotation(Mixin.class));
+            return Optional.of(classLoader.loadClass(ctClass.getName()).getAnnotation(Mixin.class));
         } catch (Exception ignored) {
         }
         return Optional.empty();
@@ -93,16 +93,18 @@ public class Mappings {
         return Optional.empty();
     }
 
-    public static Mappings genRefMap(File srg, List<CtClass> ctClasses) throws Exception {
+    public static Mappings genRefMap(File srg, ClassLoader classLoader, List<CtClass> ctClasses)
+            throws
+            Exception {
         List<CtClass> mixins = new ArrayList<>();
         ctClasses.forEach((ctClass) -> {
-            Optional<Mixin> mixinMeta = getMixinMetadata(ctClass);
+            Optional<Mixin> mixinMeta = getMixinMetadata(classLoader, ctClass);
             mixinMeta.ifPresent((meta) -> mixins.add(ctClass));
         });
         Mappings oriSrg = new Mappings(srg);
         List<Mappings> mappingss = new ArrayList<>();
         mixins.forEach((mixinClass) -> {
-            Optional<Mixin> mixinOpt = getMixinMetadata(mixinClass);
+            Optional<Mixin> mixinOpt = getMixinMetadata(classLoader, mixinClass);
             mixinOpt.ifPresent((mixinMeta) -> {
                 Optional<CtClass> targetOpt = getCtClass(mixinMeta.value());
                 targetOpt.ifPresent((targetClass) -> {
@@ -132,7 +134,8 @@ public class Mappings {
                 .class));
         File output = new File("outputRefmap.srg");
         File oriSrg = new File("mixedSrg.srg");
-        Mappings newMappings = genRefMap(oriSrg, classpath);
+        Mappings newMappings = genRefMap(oriSrg, Thread.currentThread().getContextClassLoader(),
+                classpath);
         Files.write(output.toPath(), newMappings.toLines(), StandardOpenOption.TRUNCATE_EXISTING,
                 StandardOpenOption.CREATE);
     }
