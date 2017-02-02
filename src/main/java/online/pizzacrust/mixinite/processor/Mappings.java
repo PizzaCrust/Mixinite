@@ -86,11 +86,11 @@ public class Mappings {
         return Optional.empty();
     }
 
-    private static Optional<CtClass> getCtClass(Class<?> clazz) {
-        try {
-            return Optional.of(ClassPool.getDefault().getCtClass(clazz.getName()));
-        } catch (Exception e) {
-            e.printStackTrace();
+    private static Optional<CtClass> getCtClass(List<CtClass> ctClasses, Class<?> clazz) {
+        for (CtClass ctClass : ctClasses) {
+            if (ctClass.getName().equals(clazz.getName())) {
+                return Optional.of(ctClass);
+            }
         }
         return Optional.empty();
     }
@@ -108,7 +108,7 @@ public class Mappings {
         mixins.forEach((mixinClass) -> {
             Optional<Mixin> mixinOpt = getMixinMetadata(classLoader, mixinClass);
             mixinOpt.ifPresent((mixinMeta) -> {
-                Optional<CtClass> targetOpt = getCtClass(mixinMeta.value());
+                Optional<CtClass> targetOpt = getCtClass(ctClasses, mixinMeta.value());
                 targetOpt.ifPresent((targetClass) -> {
                     Mappings fieldRefMap = new FDProcessor().process(mixinClass, targetClass,
                             oriSrg);
