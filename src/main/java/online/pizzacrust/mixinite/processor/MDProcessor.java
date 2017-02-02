@@ -13,11 +13,16 @@ import java.util.Optional;
 import online.pizzacrust.mixinite.FallbackMain;
 import online.pizzacrust.mixinite.MixinFallbackMain;
 import online.pizzacrust.mixinite.transform.InjectorPlugin;
+import online.pizzacrust.mixinite.transform.LoggablePlugin;
 import online.pizzacrust.mixinite.transform.MethodOverlapPlugin;
 
-public class MDProcessor implements Processor {
+public class MDProcessor extends LoggablePlugin implements Processor {
 
     private final Mappings mappings = new Mappings();
+
+    public MDProcessor() {
+        super("MDProcessor");
+    }
 
     public static String appendClassToDescriptor(String descriptor, String className) {
         String last = descriptor.substring(0, descriptor.lastIndexOf(';') + 1);
@@ -43,6 +48,7 @@ public class MDProcessor implements Processor {
         for (CtMethod ctMethod : mixin.getDeclaredMethods()) {
                 Optional<MethodRef> unmapped = srg.getUnmappedMethodMapping(target, ctMethod);
                 unmapped.ifPresent((methodRef) -> {
+                    log("Found mappings for " + ctMethod.getName() + "!");
                     String targetDescriptor = methodRef.getDesc();
                     String callbackClass = InjectorPlugin.CallbackMetadata.class.getName();
                     if (hasCallback(ctMethod.getMethodInfo2().getDescriptor())) {
@@ -62,11 +68,15 @@ public class MDProcessor implements Processor {
                                     .getName().replace('.', '/'), methodRef.getName(),
                             targetDescriptor).toString());
                     */
-                    mappings.methodRefs.put(new MethodRef(mixin.getName().replace('.', '/'),
-                            ctMethod.getName(), ctMethod.getMethodInfo2().getDescriptor()), new
+                    MethodRef original = new MethodRef(mixin.getName().replace('.', '/'),
+                            ctMethod.getName(), ctMethod.getMethodInfo2().getDescriptor());
+                    MethodRef remapped = new
                             MethodRef(
                             mixin
-                            .getName().replace('.', '/'), methodRef.getName(), targetDescriptor));
+                                    .getName().replace('.', '/'), methodRef.getName(),
+                            targetDescriptor);
+                    log(original.toString() + " " + remapped.toString());
+                    mappings.methodRefs.put(original, remapped);
                 });
         }
         return this.mappings;

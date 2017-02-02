@@ -11,15 +11,21 @@ import java.util.Optional;
 
 import online.pizzacrust.mixinite.FallbackMain;
 import online.pizzacrust.mixinite.MixinFallbackMain;
+import online.pizzacrust.mixinite.transform.LoggablePlugin;
 
-public class FDProcessor implements Processor{
+public class FDProcessor extends LoggablePlugin implements Processor{
     private final Mappings mappings = new Mappings();
+
+    public FDProcessor() {
+        super("FDProcessor");
+    }
 
     @Override
     public Mappings process(CtClass mixin, CtClass target, Mappings srg) {
         for (CtField mixinField : mixin.getDeclaredFields()) {
             Optional<FieldRef> unmapped = srg.getUnmappedFieldMapping(target, mixinField);
             unmapped.ifPresent((fieldRef) -> {
+                log("Found mappings for " + mixinField.getName() + "!");
                 try {
                     FieldRef ori = new FieldRef(mixinField.getDeclaringClass().getName().replace
                             ('.', '/'),
@@ -27,6 +33,7 @@ public class FDProcessor implements Processor{
                     FieldRef remapped = new FieldRef(mixinField.getDeclaringClass().getName()
                             .replace('.', '/'),
                             fieldRef.getName());
+                    log(ori.toString() + " to " + remapped.toString());
                     mappings.fieldRefs.put(ori, remapped);
                 } catch (Exception e) {
                     e.printStackTrace();
