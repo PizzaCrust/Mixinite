@@ -107,6 +107,7 @@ public class Mappings {
         List<Mappings> mappingss = new ArrayList<>();
         mixins.forEach((mixinClass) -> {
             Optional<Mixin> mixinOpt = getMixinMetadata(classLoader, mixinClass);
+            System.out.println("Mixin metadata is " + mixinOpt.isPresent() + ".");
             mixinOpt.ifPresent((mixinMeta) -> {
                 Optional<CtClass> targetOpt = getCtClass(ctClasses, mixinMeta.value());
                 targetOpt.ifPresent((targetClass) -> {
