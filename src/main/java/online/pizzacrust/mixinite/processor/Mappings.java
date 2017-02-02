@@ -67,10 +67,12 @@ public class Mappings {
         lines.forEach((line) -> {
             if (line.startsWith("FD")) {
                 Pair<FieldRef, FieldRef> parsedLine = FieldRef.parseLine(line);
+                System.out.println("Parsing " + line);
                 fieldRefs.put(parsedLine.getKey(), parsedLine.getValue());
             }
             if (line.startsWith("MD")) {
                 Pair<MethodRef, MethodRef> parsedLine = MethodRef.parseLine(line);
+                System.out.println("Parsing " + line);
                 methodRefs.put(parsedLine.getKey(), parsedLine.getValue());
             }
         });
